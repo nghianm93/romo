@@ -3,21 +3,16 @@ package main
 import (
 	"flag"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nghianm93/romo/api"
 )
 
 func main() {
 	listenAdr := flag.String("listenAdr", ":8000", "Listen address of the server")
+
 	app := fiber.New()
 	apiv1 := app.Group("/api/v1")
-	apiv1.Get("user", handleUser)
-	app.Get("/temp", handleTemp)
+	apiv1.Get("/user", api.HandleGetUsers)
+	apiv1.Get("/user/:id", api.HandleGetUser)
+
 	app.Listen(*listenAdr)
-}
-
-func handleTemp(c *fiber.Ctx) error {
-	return c.JSON(map[string]string{"msg": "hello"})
-}
-
-func handleUser(c *fiber.Ctx) error {
-	return c.JSON(map[string]string{"user": "nghianm93"})
 }
