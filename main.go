@@ -12,8 +12,6 @@ import (
 )
 
 const dburi = "mongodb://localhost:27017"
-const dbname = "romodb"
-const userColl = "users"
 
 func main() {
 

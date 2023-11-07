@@ -1,10 +1,8 @@
 package api
 
 import (
-	"context"
 	"github.com/gofiber/fiber/v2"
 	"github.com/nghianm93/romo/db"
-	"github.com/nghianm93/romo/types"
 )
 
 type UserHandler struct {
@@ -18,7 +16,7 @@ func NewUserHandler(userStore db.UserStore) *UserHandler {
 }
 
 func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
-	user, err := h.userStore.GetUserById(context.Background(), c.Params("id"))
+	user, err := h.userStore.GetUserById(c.Context(), c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -26,9 +24,9 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
-	u := types.User{
-		FirstName: "Nghia",
-		LastName:  "Minh",
+	users, err := h.userStore.GetUsers(c.Context())
+	if err != nil {
+		return err
 	}
-	return c.JSON(u)
+	return c.JSON(users)
 }
