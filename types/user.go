@@ -1,7 +1,66 @@
 package types
 
+import (
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
+	"regexp"
+)
+
+const (
+	bcryptCost      = 12
+	minFirstNameLen = 2
+	minLastNameLen  = 2
+	minPasswordLen  = 8
+	emailRegex      = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
+)
+
+func (params CreateUserParams) Validate() []string {
+	errors := []string{}
+	if len(params.FirstName) < minFirstNameLen {
+		errors = append(errors, fmt.Sprintf("Firstname should be at least %d character", minFirstNameLen))
+	}
+	if len(params.LastName) < minLastNameLen {
+		errors = append(errors, fmt.Sprintf("LastName shoule be at least %d character", minLastNameLen))
+	}
+	if len(params.Password) < minPasswordLen {
+		errors = append(errors, fmt.Sprintf("Password should be at least %d character", minPasswordLen))
+	}
+	if !isEmailValid(params.Email) {
+		errors = append(errors, fmt.Sprintf("email is not valid"))
+	}
+	return errors
+}
+
+func isEmailValid(e string) bool {
+	emailRegex := regexp.MustCompile(emailRegex)
+	return emailRegex.MatchString(e)
+}
+
+type CreateUserParams struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+}
+
 type User struct {
-	ID        string `bson:"_id,omitempty" json:"id,omitempty"`
-	FirstName string `bson:"firstName" json:"firstName"`
-	LastName  string `bson:"lastName" json:"lastName"`
+	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	FirstName         string             `bson:"firstName" json:"firstName"`
+	LastName          string             `bson:"lastName" json:"lastName"`
+	Email             string             `bson:"email" json:"email"`
+	EncryptedPassword string             `bson:"EncryptedPassword" json:"-"`
+}
+
+func NewUserFromParams(params CreateUserParams) (*User, error) {
+	encpw, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
+	if err != nil {
+		return nil, err
+	}
+	return &User{
+		FirstName:         params.FirstName,
+		LastName:          params.LastName,
+		Email:             params.Email,
+		EncryptedPassword: string(encpw),
+	}, nil
 }
