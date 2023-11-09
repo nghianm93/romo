@@ -42,15 +42,15 @@ type CreateUserParams struct {
 
 type ValidateMap map[string]string
 
-func HandleUserErrors(k string, v int) map[string]string {
+func HandleUserErrors(k string, v int) ValidateMap {
 	if k == "email" {
-		return map[string]string{k: fmt.Sprintf("%v not valid", k)}
+		return ValidateMap{k: fmt.Sprintf("%v not valid", k)}
 	}
-	return map[string]string{k: fmt.Sprintf("%v must be at least %d character", k, v)}
+	return ValidateMap{k: fmt.Sprintf("%v must be at least %d character", k, v)}
 }
 
 func NewUserFromParams(params CreateUserParams) (*User, error) {
-	encryptPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
+	encryptPassword, err := generateEncryptedPassword(params.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +93,10 @@ func (p UpdateUserParams) ValidateUpdateUserParams() []ValidateMap {
 func isEmailValid(e string) bool {
 	emailRegex := regexp.MustCompile(emailRegex)
 	return emailRegex.MatchString(e)
+}
+
+func generateEncryptedPassword(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 }
 
 func (p UpdateUserParams) ToBSON() bson.M {
