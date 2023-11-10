@@ -46,4 +46,5 @@ func main() {
 	apiv1.Delete("user/:id", userHandler.HandleDeleteUser)
 
 	app.Listen(*listenAddr)
+
 }

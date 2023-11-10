@@ -13,6 +13,7 @@ const (
 	minFirstNameLen = 2
 	minLastNameLen  = 2
 	minPasswordLen  = 8
+	emailValid      = 1
 	emailRegex      = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
 	firstName       = "firstName"
 	lastName        = "lastName"
@@ -55,57 +56,57 @@ func NewUserFromParams(params CreateUserParams) (*User, error) {
 	}, nil
 }
 
-func (params CreateUserParams) ValidateCreateUserParams() []ValidateMap {
-	var errors []ValidateMap
-	if len(params.FirstName) < minFirstNameLen {
-		errors = append(errors, HandleUserErrors(firstName, minFirstNameLen))
-	}
-	if len(params.LastName) < minLastNameLen {
-		errors = append(errors, HandleUserErrors(lastName, minLastNameLen))
-	}
-	if len(params.Password) < minPasswordLen {
-		errors = append(errors, HandleUserErrors(password, minPasswordLen))
-	}
-	if !isEmailValid(params.Email) {
-		errors = append(errors, HandleUserErrors(email, minFirstNameLen))
-	}
+func (params CreateUserParams) ValidateCreateUserParams() ValidateMap {
+	errors := ValidateMap{}
+	validateShortHand(errors, firstName, params.FirstName, minFirstNameLen)
+	validateShortHand(errors, lastName, params.LastName, minLastNameLen)
+	validateShortHand(errors, password, params.Password, minPasswordLen)
+	validateShortHand(errors, email, isEmailValid(params.Email), emailValid)
 	return errors
 }
 
-func (p UpdateUserParams) ValidateUpdateUserParams() []ValidateMap {
-	var errors []ValidateMap
-	if len(p.FirstName) < minFirstNameLen {
-		errors = append(errors, HandleUserErrors(firstName, minFirstNameLen))
-	}
-	if len(p.LastName) < minLastNameLen {
-		errors = append(errors, HandleUserErrors(lastName, minLastNameLen))
-	}
+func (params UpdateUserParams) ValidateUpdateUserParams() ValidateMap {
+	errors := ValidateMap{}
+	validateShortHand(errors, firstName, params.FirstName, minFirstNameLen)
+	validateShortHand(errors, lastName, params.LastName, minLastNameLen)
 	return errors
 }
 
-func HandleUserErrors(k string, v int) ValidateMap {
+func HandleUserErrors(k string, v int) string {
 	if k == "email" {
-		return ValidateMap{k: fmt.Sprintf("%v not valid", k)}
+		return fmt.Sprintf("%v not valid", k)
 	}
-	return ValidateMap{k: fmt.Sprintf("%v must be at least %d character", k, v)}
+	return fmt.Sprintf("%v must be at least %d character", k, v)
 }
 
-func isEmailValid(e string) bool {
+func isEmailValid(e string) string {
+	valid := "valid"
+	notvalid := ""
 	emailRegex := regexp.MustCompile(emailRegex)
-	return emailRegex.MatchString(e)
+	if !emailRegex.MatchString(e) {
+		return notvalid
+	}
+	return valid
 }
 
 func generateEncryptedPassword(password string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 }
 
-func (p UpdateUserParams) ToBSON() bson.M {
+func (params UpdateUserParams) ToBSON() bson.M {
 	m := bson.M{}
-	if len(p.FirstName) > 0 {
-		m["firstName"] = p.FirstName
+	if len(params.FirstName) > 0 {
+		m["firstName"] = params.FirstName
 	}
-	if len(p.LastName) > 0 {
-		m["lastName"] = p.LastName
+	if len(params.LastName) > 0 {
+		m["lastName"] = params.LastName
 	}
 	return m
+}
+
+func validateShortHand(e ValidateMap, f, v string, l int) ValidateMap {
+	if len(v) < l {
+		e[f] = HandleUserErrors(f, l)
+	}
+	return e
 }
