@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"github.com/nghianm93/romo/api"
 	"github.com/nghianm93/romo/db"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,6 +15,10 @@ import (
 const dburi = "mongodb://localhost:27017"
 
 func main() {
+	errENV := godotenv.Load()
+	if errENV != nil {
+		log.Fatal(errENV)
+	}
 
 	listenAddr := flag.String("listenAddr", ":8000", "Listen address of the server")
 	flag.Parse()
@@ -23,7 +28,9 @@ func main() {
 
 		log.Fatal(err)
 	}
-	userHandler := api.NewUserHandler(db.NewMongoUserStore(client))
+
+	userStore := db.NewMongoUserStore(client)
+	userHandler := api.NewUserHandler(userStore)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
