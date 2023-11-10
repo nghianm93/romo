@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"os"
 )
 
 const userColl = "users"
@@ -17,7 +18,11 @@ type UserStore interface {
 	DeleteUser(context.Context, string) error
 	InsertUser(context.Context, *types.User) (*types.User, error)
 	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
-	//UpdateManyUser(context.Context, string) error
+	Dropper
+}
+
+type Dropper interface {
+	Drop(context.Context) error
 }
 
 type MongoUserStore struct {
@@ -26,11 +31,16 @@ type MongoUserStore struct {
 }
 
 func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
-
+	dbname := os.Getenv(DBNAME)
 	return &MongoUserStore{
 		client: client,
-		coll:   client.Database(DBNAME).Collection(userColl),
+		coll:   client.Database(dbname).Collection(userColl),
 	}
+}
+
+func (s *MongoUserStore) Drop(ctx context.Context) error {
+	fmt.Println("--- Dropping mongodb Collection ---")
+	return s.coll.Drop(ctx)
 }
 
 func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {

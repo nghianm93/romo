@@ -42,13 +42,6 @@ type CreateUserParams struct {
 
 type ValidateMap map[string]string
 
-func HandleUserErrors(k string, v int) ValidateMap {
-	if k == "email" {
-		return ValidateMap{k: fmt.Sprintf("%v not valid", k)}
-	}
-	return ValidateMap{k: fmt.Sprintf("%v must be at least %d character", k, v)}
-}
-
 func NewUserFromParams(params CreateUserParams) (*User, error) {
 	encryptPassword, err := generateEncryptedPassword(params.Password)
 	if err != nil {
@@ -88,6 +81,13 @@ func (p UpdateUserParams) ValidateUpdateUserParams() []ValidateMap {
 		errors = append(errors, HandleUserErrors(lastName, minLastNameLen))
 	}
 	return errors
+}
+
+func HandleUserErrors(k string, v int) ValidateMap {
+	if k == "email" {
+		return ValidateMap{k: fmt.Sprintf("%v not valid", k)}
+	}
+	return ValidateMap{k: fmt.Sprintf("%v must be at least %d character", k, v)}
 }
 
 func isEmailValid(e string) bool {
