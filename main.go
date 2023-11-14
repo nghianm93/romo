@@ -7,12 +7,12 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nghianm93/romo/api"
 	"github.com/nghianm93/romo/db"
+	"github.com/nghianm93/romo/types"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"os"
 )
-
-const dburi = "mongodb://localhost:27017"
 
 func main() {
 	errENV := godotenv.Load()
@@ -23,18 +23,19 @@ func main() {
 	listenAddr := flag.String("listenAddr", ":8000", "Listen address of the server")
 	flag.Parse()
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(dburi))
-	if err != nil {
+	databaseUrl := os.Getenv("MONGO_DB_URL")
 
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(databaseUrl))
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	userStore := db.NewMongoUserStore(client)
-	userHandler := api.NewUserHandler(userStore)
+	userStore := *db.NewMongoUserStore(client)
+	userHandler := api.NewUserHandler(&userStore)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
-			return ctx.JSON(map[string]string{"error": err.Error()})
+			return ctx.JSON(types.ValidateMap{"error": err.Error()})
 		},
 	})
 	apiv1 := app.Group("/api/v1")

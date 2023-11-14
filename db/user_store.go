@@ -66,6 +66,7 @@ func (s *MongoUserStore) InsertUser(ctx context.Context, user *types.User) (*typ
 }
 
 func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
+	fmt.Println(id)
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
