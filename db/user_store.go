@@ -66,7 +66,6 @@ func (s *MongoUserStore) InsertUser(ctx context.Context, user *types.User) (*typ
 }
 
 func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
-	fmt.Println(id)
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
@@ -86,7 +85,6 @@ func (s *MongoUserStore) GetUserById(ctx context.Context, id string) (*types.Use
 	if err := s.coll.FindOne(ctx, bson.M{"_id": oid}).Decode(&user); err != nil {
 		return nil, err
 	}
-	fmt.Println(ctx)
 	return &user, nil
 }
 
@@ -103,6 +101,5 @@ func (s *MongoUserStore) GetUsers(ctx context.Context) ([]*types.User, error) {
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
-	fmt.Println(ctx)
 	return users, nil
 }
