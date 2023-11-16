@@ -10,8 +10,6 @@ import (
 	"os"
 )
 
-const userColl = "users"
-
 type UserStore interface {
 	GetUserById(context.Context, string) (*types.User, error)
 	GetUsers(ctx context.Context) ([]*types.User, error)
